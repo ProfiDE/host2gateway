@@ -3,6 +3,11 @@
 // Display errors for debugging (remove in production)
 ini_set('display_errors', 1);
 
+// Ensure databases directory exists
+if (!is_dir(__DIR__ . '/databases')) {
+    mkdir(__DIR__ . '/databases', 0700, true);
+}
+
 // Create or open SQLite database
 $db = new SQLite3(__DIR__ . '/databases/'.date('Y-m-d').'.db');
 
