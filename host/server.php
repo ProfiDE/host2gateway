@@ -69,3 +69,10 @@ if (!isset($_POST['h2g_signature'])) {
     header('HTTP/1.1 404 Not Found');
     exit(0);
 }
+
+if ($_POST['h2g_signature'] === 'test_signature'){
+    die(json_encode([
+        'status' => 'ok',
+        'message' => 'Test signature received successfully.'
+    ]));
+}
