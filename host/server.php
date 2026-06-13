@@ -55,11 +55,6 @@ if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
         die("Failed to write public key file.");
     }
 
-    // Restrict permissions on the key files
-    chmod($serverPrivateKeyFile, 0600);
-    chmod($serverPublicKeyFile, 0644);
-    chmod($clientPublicKeyFile, 0644);
-
     // Return public key (base64 encoded) as JSON for client consumption
     header('Content-Type: application/json');
     echo json_encode([
