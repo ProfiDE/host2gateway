@@ -4,7 +4,7 @@
 ini_set('display_errors', 1);
 
 // Create or open SQLite database
-$db = new SQLite3(__DIR__ . '/database.db');
+$db = new SQLite3(__DIR__ . '/databases/'.date('Y-m-d').'.db');
 
 // Create table if not exists
 $db->exec('CREATE TABLE IF NOT EXISTS requests (
