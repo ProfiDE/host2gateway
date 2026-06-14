@@ -90,3 +90,19 @@ if (!file_exists($clientPrivateKeyFile) || !file_exists($clientPublicKeyFile)) {
 
     die("Client key pair generated successfully. Please manually copy the client's public key (public.pem) to the host's keys directory, rename it to client.pem, then refresh this page.");
 }
+
+// Check if the response contains a public key transfer instruction and handle it
+if (isset($responseData['status']) && $responseData['status'] === 'pubkey_transfer' && isset($responseData['pubkey'])) {
+    // Decode the base64-encoded public key from the response
+    $serverPubKey = base64_decode($responseData['pubkey']);
+    if ($serverPubKey === false) {
+        die("Failed to decode server public key from response.");
+    }
+
+    // Save the server's public key to file for future use
+    if (file_put_contents($serverPublicKeyFile, $serverPubKey) === false) {
+        die("Failed to write server public key file.");
+    }
+
+    echo "Server public key received and saved successfully.<br>";
+}
