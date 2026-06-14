@@ -33,28 +33,33 @@ if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
     $res = openssl_pkey_new($config);
 
     if ($res === false) {
+        header('HTTP/1.1 500 Internal Server Error');
         die("Failed to generate key pair: " . openssl_error_string());
     }
 
     // Export private key from the pair
     if (!openssl_pkey_export($res, $privateKeyOut)) {
+        header('HTTP/1.1 500 Internal Server Error');
         die("Failed to export private key: " . openssl_error_string());
     }
 
     // Obtain the public key from the pair
     $details = openssl_pkey_get_details($res);
     if ($details === false) {
+        header('HTTP/1.1 500 Internal Server Error');
         die("Failed to get key details: " . openssl_error_string());
     }
     $publicKeyOut = $details['key'];
 
     // Save the private key to file
     if (file_put_contents($serverPrivateKeyFile, $privateKeyOut) === false) {
+        header('HTTP/1.1 500 Internal Server Error');
         die("Failed to write private key file.");
     }
 
     // Save the public key to file
     if (file_put_contents($serverPublicKeyFile, $publicKeyOut) === false) {
+        header('HTTP/1.1 500 Internal Server Error');
         die("Failed to write public key file.");
     }
 
