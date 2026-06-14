@@ -38,7 +38,7 @@ curl_close($ch);
 if ($ok) {
     echo "Gateway is accessible: {$hostURL}<br>";
 } else {
-    die("Gateway is not accessible: {$hostURL}<br>");
+    echo("Gateway is not accessible: {$hostURL}<br>");
 }
 
 // Check if server private and public keys exist; if not, generate them
