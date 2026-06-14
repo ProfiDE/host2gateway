@@ -18,7 +18,8 @@ if (!is_dir(__DIR__ . '/keys')) {
 
 // Check if client's public key exists (must be provided manually)
 if (!file_exists($clientPublicKeyFile)) {
-    die('Client public key file (client_public.pem) should be transferred to this directory manually to continue.');
+    header('HTTP/1.1 403 Forbidden');
+    die('Client public key file (client.pem) should be transferred to this directory manually to continue.');
 }
 
 // Check if server private and public keys exist; if not, generate them
