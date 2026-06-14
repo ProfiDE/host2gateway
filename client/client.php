@@ -51,8 +51,6 @@ if ($ok) {
     echo("Gateway is not accessible: {$hostURL}<br>");
 }
 
-
-
 // Check if server private and public keys exist; if not, generate them
 if (!file_exists($clientPrivateKeyFile) || !file_exists($clientPublicKeyFile)) {
     // Configuration for RSA 4096 bit key pair
