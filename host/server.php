@@ -8,6 +8,9 @@ $clientPublicKeyFile = __DIR__ . '/keys/client.pem';
 $serverPrivateKeyFile = __DIR__ . '/keys/private.pem';
 $serverPublicKeyFile = __DIR__ . '/keys/public.pem';
 
+// Test signature content
+$testSignature = 'test_signature';
+
 // Ensure keys directory exists
 if (!is_dir(__DIR__ . '/keys')) {
     mkdir(__DIR__ . '/keys', 0700, true);
@@ -70,9 +73,16 @@ if (!isset($_POST['h2g_signature'])) {
     exit(0);
 }
 
-if ($_POST['h2g_signature'] === 'test_signature'){
+// Check if the received signature matches the test signature
+if ($_POST['h2g_signature'] === $testSignature){
     die(json_encode([
         'status' => 'ok',
         'message' => 'Test signature received successfully.'
+    ]));
+} else {
+    header('HTTP/1.1 403 Forbidden');
+    die(json_encode([
+        'status' => 'invalid_signature',
+        'message' => 'Received signature is invalid.'
     ]));
 }
