@@ -28,10 +28,20 @@ curl_setopt_array($ch, [
     CURLOPT_SSL_VERIFYHOST => false,
 ]);
 
-// Execute the request and capture response status
-curl_exec($ch);
+// Execute the request and capture response
+$response = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $ok = curl_errno($ch) === 0 && $code >= 200 && $code < 400;
+
+// If the response is JSON, decode it to an array and store in $responseData
+$responseData = null;
+if (is_string($response)) {
+    $decoded = json_decode($response, true);
+    if (json_last_error() === JSON_ERROR_NONE) {
+        $responseData = $decoded;
+    }
+}
+
 curl_close($ch);
 
 // Report the gateway accessibility result
@@ -40,6 +50,8 @@ if ($ok) {
 } else {
     echo("Gateway is not accessible: {$hostURL}<br>");
 }
+
+
 
 // Check if server private and public keys exist; if not, generate them
 if (!file_exists($clientPrivateKeyFile) || !file_exists($clientPublicKeyFile)) {
