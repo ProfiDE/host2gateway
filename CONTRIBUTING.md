@@ -23,14 +23,13 @@ Thanks for your interest! 🎉
 
 ## Commit Message Rules
 
-Format: `type(scope): subject`
+This project follows [Conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13) for writing clear, machine-readable commit messages.
 
-**Types:**
-- `feat` – new feature
-- `fix` – bug fix
-- `docs` – documentation
-- `refactor` – code cleanup
-- `chore` – maintenance
+Each commit message must be structured as follows:
+
+```
+<type>(<scope>): <subject>
+```
 
 **Examples:**
 ```bash
