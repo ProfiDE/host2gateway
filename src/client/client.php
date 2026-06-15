@@ -3,8 +3,6 @@
 // Require configuration file
 require_once __DIR__ . '/config.php';
 
-global $hostURL, $testSignature;
-
 // Validate the configured host URL before attempting the request
 if (!filter_var($hostURL, FILTER_VALIDATE_URL)) {
     echo "URL is invalid: {$hostURL}\n";
