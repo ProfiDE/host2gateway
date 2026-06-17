@@ -1,3 +1,5 @@
+![host2gateway banner](assets/banner.png)
+
 # host2gateway
 
 **host2gateway** is a tool designed to provide access from a web server (Gateway) to a client **without requiring static IP addresses, port forwarding, changing firewall rules, or other complex configurations**. It is written in PHP and can be deployed on most hosting provider environments.
