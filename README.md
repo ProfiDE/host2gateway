@@ -55,7 +55,7 @@ The client establishes an outbound connection to a Gateway server that is access
 
 ## License
 
-This project is released under the GPLv3 License.
+This project is released under the MIT License.
 
 ## Contributing
 
