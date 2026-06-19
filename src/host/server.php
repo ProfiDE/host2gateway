@@ -1,6 +1,11 @@
 <?php
 
 require_once __DIR__ . '/config.php';
+require __DIR__ . '/vendor/autoload.php';
+
+use phpseclib3\Crypt\RSA;
+
+RSA::forceEngine('PHP');
 
 // Check if client's public key exists (must be provided manually)
 if (!file_exists($clientPublicKeyFile)) {
@@ -10,51 +15,65 @@ if (!file_exists($clientPublicKeyFile)) {
 
 // Check if server private and public keys exist; if not, generate them
 if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
-    // Configuration for RSA 4096 bit key pair
-    $config = [
-        "private_key_type" => OPENSSL_KEYTYPE_RSA,
-        "private_key_bits" => 4096,
-    ];
-
     // Generate the key pair
-    $res = openssl_pkey_new($config);
-
-    if ($res === false) {
+    try {
+        $serverPrivateKey = RSA::createKey($RSAPrivateKeyBits);
+    } catch (Exception $e) {
         header('HTTP/1.1 500 Internal Server Error');
-        die("Failed to generate key pair: " . openssl_error_string());
-    }
-
-    // Export private key from the pair
-    if (!openssl_pkey_export($res, $privateKeyOut)) {
-        header('HTTP/1.1 500 Internal Server Error');
-        die("Failed to export private key: " . openssl_error_string());
+        die("Failed to generate key pair: " . $e->getMessage());
     }
 
     // Obtain the public key from the pair
-    $details = openssl_pkey_get_details($res);
-    if ($details === false) {
+    try {
+        $serverPublicKey = $serverPrivateKey->getPublicKey();
+    } catch (Exception $e) {
         header('HTTP/1.1 500 Internal Server Error');
-        die("Failed to get key details: " . openssl_error_string());
+        die("Failed to obtain key: " . $e->getMessage());
     }
-    $publicKeyOut = $details['key'];
-
+    
     // Save the private key to file
-    if (file_put_contents($serverPrivateKeyFile, $privateKeyOut) === false) {
+    if (file_put_contents($serverPrivateKeyFile, $serverPrivateKey->toString('PKCS8')) === false) {
         header('HTTP/1.1 500 Internal Server Error');
         die("Failed to write private key file.");
     }
 
     // Save the public key to file
-    if (file_put_contents($serverPublicKeyFile, $publicKeyOut) === false) {
+    if (file_put_contents($serverPublicKeyFile, $serverPublicKey->toString('PKCS8')) === false) {
         header('HTTP/1.1 500 Internal Server Error');
         die("Failed to write public key file.");
     }
 
-    // Return public key (base64 encoded) as JSON for client consumption
+    // Read client's public key
+    try{
+        $clientPublicKey = RSA::load(file_get_contents($clientPublicKeyFile));
+    } catch(Exception $e) {
+        header('HTTP/1.1 500 Internal Server Error');
+        die("Failed to read client public key file: " . $e->getMessage());
+    }
+
+    // Encrypt server's public key sha256 hash using client's public key
+    try{
+        $encryptedServerPublicKeyHash = $clientPublicKey->encrypt(hash('sha256', $serverPublicKey->toString('PKCS8')));
+    } catch(Exception $e) {
+        header('HTTP/1.1 500 Internal Server Error');
+        die("Failed to encrypt public key: " . $e->getMessage() . "<br>Please remove existing server keys and retransfer client public key and try again.");
+    }
+
+    // Sign server's public key
+    try{
+        $signatureServerPublicKey = $serverPrivateKey->sign($serverPublicKey->toString('PKCS8'));
+    } catch(Exception $e) {
+        header('HTTP/1.1 500 Internal Server Error');
+        die("Failed to sign server's public key: " . $e->getMessage() . "<br>Please remove existing server keys and retransfer client public key and try again.");
+    }
+    // Return encrypted public key (base64 encoded) as JSON for client consumption
     header('Content-Type: application/json');
+    
     echo json_encode([
         'status' => 'pubkey_transfer',
-        'pubkey' => base64_encode($publicKeyOut)
+        'pubkey' => base64_encode($serverPublicKey->toString('PKCS8')),
+        'hash' => base64_encode($encryptedServerPublicKeyHash),
+        'sign' => base64_encode($signatureServerPublicKey),
     ]);
     exit;
 }
