@@ -1,3 +1,5 @@
 src/host/keys/*.pem
 src/client/keys/*.pem
 src/host/databases/*.db
+src/host/vendor
+src/client/vendor
