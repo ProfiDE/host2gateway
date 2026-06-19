@@ -15,3 +15,6 @@ if (!is_dir(__DIR__ . '/keys')) {
 $clientPublicKeyFile = __DIR__ . '/keys/client.pem';
 $serverPrivateKeyFile = __DIR__ . '/keys/private.pem';
 $serverPublicKeyFile = __DIR__ . '/keys/public.pem';
+
+// Configure private key length (Bits)
+$RSAPrivateKeyBits = 4096;
