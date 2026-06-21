@@ -1,11 +1,13 @@
 <?php
 
-// Require configuration file
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+use phpseclib3\Crypt\RSA;
 
 // Validate the configured host URL before attempting the request
 if (!filter_var($hostURL, FILTER_VALIDATE_URL)) {
-    echo "URL is invalid: {$hostURL}\n";
+    echo "Host's URL is invalid: {$hostURL}\n";
     return;
 }
 
@@ -50,40 +52,33 @@ if ($ok) {
     echo("Gateway is not accessible: {$hostURL}<br>");
 }
 
-// Check if server private and public keys exist; if not, generate them
+// Check if client private and public keys exist; if not, generate them
 if (!file_exists($clientPrivateKeyFile) || !file_exists($clientPublicKeyFile)) {
-    // Configuration for RSA 4096 bit key pair
-    $config = [
-        "private_key_type" => OPENSSL_KEYTYPE_RSA,
-        "private_key_bits" => 4096,
-    ];
-
     // Generate the key pair
-    $res = openssl_pkey_new($config);
-
-    if ($res === false) {
-        die("Failed to generate key pair: " . openssl_error_string());
-    }
-
-    // Export private key from the pair
-    if (!openssl_pkey_export($res, $privateKeyOut)) {
-        die("Failed to export private key: " . openssl_error_string());
+    try {
+        $clientPrivateKey = RSA::createKey($RSAPrivateKeyBits);
+    } catch (Exception $e) {
+        header('HTTP/1.1 500 Internal Client Error');
+        die("Failed to generate key pair: " . $e->getMessage());
     }
 
     // Obtain the public key from the pair
-    $details = openssl_pkey_get_details($res);
-    if ($details === false) {
-        die("Failed to get key details: " . openssl_error_string());
+    try {
+        $clientPublicKey = $clientPrivateKey->getPublicKey();
+    } catch (Exception $e) {
+        header('HTTP/1.1 500 Internal Client Error');
+        die("Failed to obtain key: " . $e->getMessage());
     }
-    $publicKeyOut = $details['key'];
 
     // Save the private key to file
-    if (file_put_contents($clientPrivateKeyFile, $privateKeyOut) === false) {
+    if (file_put_contents($clientPrivateKeyFile, $clientPrivateKey->toString('PKCS8')) === false) {
+        header('HTTP/1.1 500 Internal Client Error');
         die("Failed to write private key file.");
     }
 
     // Save the public key to file
-    if (file_put_contents($clientPublicKeyFile, $publicKeyOut) === false) {
+    if (file_put_contents($clientPublicKeyFile, $clientPublicKey->toString('PKCS8')) === false) {
+        header('HTTP/1.1 500 Internal Client Error');
         die("Failed to write public key file.");
     }
 
@@ -91,17 +86,45 @@ if (!file_exists($clientPrivateKeyFile) || !file_exists($clientPublicKeyFile)) {
 }
 
 // Check if the response contains a server public key transfer instruction and handle it
-if (isset($responseData['status']) && $responseData['status'] === 'pubkey_transfer' && isset($responseData['pubkey'])) {
+if (isset($responseData['status']) && $responseData['status'] === 'pubkey_transfer' && isset($responseData['pubkey']) && isset($responseData['sign'])) {
     // Decode the base64-encoded public key from the response
-    $serverPubKey = base64_decode($responseData['pubkey']);
-    if ($serverPubKey === false) {
-        die("Failed to decode server public key from response.");
+    $serverPublicKeyString = base64_decode($responseData['pubkey']);
+    if ($serverPublicKeyString === false) {
+        die("Failed to decode server's public key from response.");
+    }
+
+    echo "Server public key received successfully. Checking signature...<br>";
+
+    // Decode the base64-encoded signature from the response
+    $signature = base64_decode($responseData['sign']);
+    if ($signature === false) {
+        die("Failed to decode signature from response.");
+    }
+    
+    // Try to load the server's public key
+    try {
+        $serverPublicKey = RSA::load($serverPublicKeyString);
+    } catch (Exception $e) {
+        die("Failed to load server's public key: " . $e->getMessage());
+    }
+
+    // Verify the signature of the server's public key
+    try {
+        $isValid = $serverPublicKey->withPadding(RSA::SIGNATURE_PSS)->verify($serverPublicKeyString, $signature);
+        if ($isValid) {
+            echo "Signature is valid!<br>";
+        }else {
+            die("Signature is invalid. It seems the server's public key has been tampered with. Please be cautious and do not proceed.");
+        }
+    } catch (Exception $e) {
+        die("Failed to verify the signature of server's public key: " . $e->getMessage());
     }
 
     // Save the server's public key to file for future use
-    if (file_put_contents($serverPublicKeyFile, $serverPubKey) === false) {
+    if (file_put_contents($serverPublicKeyFile, $serverPublicKeyString)) {
+        die("Server's public key saved successfully. Now everything is ready! Use cron to run this file every second. You can use this client's key pair on other host2gateway clients at the same time.");
+    }else{
         die("Failed to write server public key file.");
     }
-
-    echo "Server public key received and saved successfully.<br>";
 }
+
