@@ -51,14 +51,6 @@ if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
         die("Failed to read client public key file: " . $e->getMessage());
     }
 
-    // Encrypt server's public key sha256 hash using client's public key
-    try{
-        $encryptedServerPublicKeyHash = $clientPublicKey->encrypt(hash('sha256', $serverPublicKey->toString('PKCS8')));
-    } catch(Exception $e) {
-        header('HTTP/1.1 500 Internal Server Error');
-        die("Failed to encrypt public key: " . $e->getMessage() . "<br>Please remove existing server keys and retransfer client public key and try again.");
-    }
-
     // Sign server's public key
     try{
         $signatureServerPublicKey = $serverPrivateKey->sign($serverPublicKey->toString('PKCS8'));
@@ -66,13 +58,13 @@ if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
         header('HTTP/1.1 500 Internal Server Error');
         die("Failed to sign server's public key: " . $e->getMessage() . "<br>Please remove existing server keys and retransfer client public key and try again.");
     }
+    
     // Return encrypted public key (base64 encoded) as JSON for client consumption
     header('Content-Type: application/json');
     
     echo json_encode([
         'status' => 'pubkey_transfer',
         'pubkey' => base64_encode($serverPublicKey->toString('PKCS8')),
-        'hash' => base64_encode($encryptedServerPublicKeyHash),
         'sign' => base64_encode($signatureServerPublicKey),
     ]);
     exit;
