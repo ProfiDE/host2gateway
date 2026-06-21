@@ -53,7 +53,7 @@ if (!file_exists($serverPrivateKeyFile) || !file_exists($serverPublicKeyFile)) {
 
     // Sign server's public key
     try{
-        $signatureServerPublicKey = $serverPrivateKey->sign($serverPublicKey->toString('PKCS8'));
+        $signatureServerPublicKey = $serverPrivateKey->withPadding(RSA::SIGNATURE_PSS)->sign($serverPublicKey->toString('PKCS8'));
     } catch(Exception $e) {
         header('HTTP/1.1 500 Internal Server Error');
         die("Failed to sign server's public key: " . $e->getMessage() . "<br>Please remove existing server keys and retransfer client public key and try again.");
