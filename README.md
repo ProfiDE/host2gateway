@@ -43,7 +43,7 @@ The client establishes an outbound connection to a Gateway server that is access
 
 4. Transfer the client's public key to the `host` directory on the server and rename it to `client.pem`.
 
-5. Set up a cron job on the client machine to run client.php at frequent intervals (e.g., every second). Example:
+5. Set up a cron job on the client machine to run client.php **every minute**. Example:
    ```sh
    * * * * * php /path/to/host2gateway/client/client.php
 
