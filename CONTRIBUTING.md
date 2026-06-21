@@ -43,7 +43,7 @@ refactor(host): move config to separate file
 
 ## Pull Request Guidelines
 
-- PRs should target the `master` branch
+- PRs should target the `develop` branch
 - Describe what you changed and why
 - One PR = one focus (not multiple unrelated changes)
 
