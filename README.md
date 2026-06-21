@@ -4,6 +4,8 @@
 
 **host2gateway** is a tool designed to provide access from a web server (Gateway) to a client **without requiring static IP addresses, port forwarding, changing firewall rules, or other complex configurations**. It is written in PHP and can be deployed on most hosting provider environments.
 
+> Note: The `develop` branch serves as the main integration branch for ongoing development. All feature branches should be merged into dev via pull requests. Direct pushes to this branch are restricted. After thorough testing and review, dev will be merged into main for production releases.
+
 ## Features
 
 - **No need for static IP or port forwarding:** No modifications to your firewall or router settings are required.
