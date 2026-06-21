@@ -3,5 +3,5 @@ src/client/keys/*.pem
 src/host/databases/*.db
 src/host/vendor
 src/host/composer.lock
-src/host/vendor
+src/client/vendor
 src/client/composer.lock
