@@ -89,3 +89,16 @@ if ($_POST['h2g_signature'] === $testSignature){
         'message' => 'Received signature is invalid.'
     ]));
 }
+
+if(isset($_POST['request']) && $_POST['request'] === 'get_updates') {
+    // Here is a template answer
+    die(json_encode([
+        'status' => 'ok',
+        'updates' => [
+            [
+                'id' => 1,
+                'request_info' => [],
+            ]
+        ]
+    ]));
+}
